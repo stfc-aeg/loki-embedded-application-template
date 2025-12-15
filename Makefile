@@ -1,15 +1,18 @@
-# Check on Xilinx tools version for the project
-TARGET_VIVADO_VERSION=v2023.2
-CURRENT_VIVADO_VERSION=$(shell vivado -version | head -n 1 | cut -d' ' -f2)
-ifneq (${TARGET_VIVADO_VERSION}, ${CURRENT_VIVADO_VERSION})
-$(error Vivado version incorrect, this project uses ${TARGET_VIVADO_VERSION}, and your version is ${CURRENT_VIVADO_VERSION})
-endif
+include .config
 
-# Default Setup - change these in your calling environment
-USE_PREBUILT_HW ?= false 	# boolean - set true to use prebuilt hardware instead of garud-fw
+# Config settings stored in .config, should be modified by running `makeconfig` in this directory.
+CONFIG_TARGET_VIVADO_VERSION?=v2023.2	# String - set the toolchain version the Makefile will check for
+CONFIG_USE_PREBUILT_HW?=false			# Boolean - set true to use prebuilt hardware instead of garud-fw
+
+# Check on Xilinx tools version for the project
+versioncheck:
+	CURRENT_VIVADO_VERSION=$(shell vivado -version | head -n 1 | cut -d' ' -f2)
+	ifneq (${CONFIG_TARGET_VIVADO_VERSION}, ${CURRENT_VIVADO_VERSION})
+	$(error Vivado version incorrect, this project uses ${CONFIG_TARGET_VIVADO_VERSION}, and your version is ${CURRENT_VIVADO_VERSION})
+	endif
 
 # Firmware Project
-VIVADO_HARDWARE_OUTPUT_DIR=$(shell pwd)/garud-fw/
+VIVADO_HARDWARE_OUTPUT_DIR=$(shell pwd)/${CONFIG_VIVADO_HARDWARE_OUTPUT_DIR_RELATIVE}
 
 # LOKI Submodule environment setup
 export LOKI_DIR=./loki/
@@ -17,7 +20,7 @@ export APPLICATION_DIR=.
 export LOKI_ENV_DIR=.
 
 # If (above) environment variable USE_PREBUILT_HW is set, use the prebuilt hardware. Otherwise build the garud-fw project.
-ifeq (${USE_PREBUILT_HW},true)
+ifeq (${CONFIG_USE_PREBUILT_HW},y)
 $(info Building GARUD with prebuilt hardware)
 export HW_EXPORT_DIR=$(shell pwd)/prebuilt
 else
@@ -26,7 +29,11 @@ export HW_EXPORT_DIR=${VIVADO_HARDWARE_OUTPUT_DIR}
 endif
 export SW_EXPORT_DIR=$(shell pwd)/prebuilt
 
-all: ${HW_EXPORT_DIR}/design_4cg_2gb.xsa ./machine.env os
+all: .config versioncheck ${HW_EXPORT_DIR}/design_4cg_2gb.xsa ./machine.env os
+
+.config:
+	$(info Project is not configured yet, running first-time setup)
+	menuconfig
 
 # Creating this file is in the README but frequently forgotten, and should be done manually
 ./machine.env:
@@ -44,7 +51,7 @@ ${VIVADO_HARDWARE_OUTPUT_DIR}/design_4cg_2gb.xsa:
 # Provides loki-configure-hw, loki-configure-sw, loki-configure-os
 include ${LOKI_DIR}/config.mk
 
-.PHONY: all os hardware software project local_hardware
+.PHONY: all os hardware software project local_hardware versioncheck
 
 project: loki-configure-hw
 	# Instead of actually building the hardware, just make the project in Vivado and stop.

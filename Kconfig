@@ -1,0 +1,41 @@
+menu "Toolchain Configuration"
+
+config TARGET_VIVADO_VERSION
+    string "What version of the Xilinx toolchain should this project check is loaded?"
+    default "v2023.2"
+endmenu
+
+menu "Hardware Configuration"
+choice
+    prompt "Local Build / Prebuilt Select"
+    default USE_LOCAL_HW_BUILD
+config USE_PREBUILT_HW
+    bool "Use a prebuilt hardware"
+    help
+        Enable to use a prebuilt hardware file from a given directory
+
+config USE_LOCAL_HW_BUILD
+    bool "Use a local hardware build"
+endchoice
+
+config VIVADO_HARDWARE_OUTPUT_DIR_RELATIVE
+    string "Local hardware build output directory"
+    help
+        Relative directory where *.xsa hardware file will be built to when using local build.
+    default "garud-fw"
+    depends on USE_LOCAL_HW_BUILD
+
+config VIVADO_HARDWARE_MAKEFILE_DIR_RELATIVE
+    string "Local hardware Makefile target directory"
+    help
+        Relative directory where the firmware Makefile is located, to be called by this top-level one.
+    default VIVADO_HARDWARE_OUTPUT_DIR_RELATIVE
+    depends on USE_LOCAL_HW_BUILD
+
+config PREBUILT_HW_DIR
+    string "Prebuilt hardware directory"
+    help
+        Relative directory where prebuilt *.xsa hardware file should be placed
+    default "prebuilt"
+    depends on USE_PREBUILT_HW
+endmenu
