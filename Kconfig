@@ -88,5 +88,8 @@ menu "Software"
 endmenu
 
 menu "LOKI"
+config LOKI_DIR
+    string "Relative LOKI Submodule Path"
+    default "loki"
 
 endmenu

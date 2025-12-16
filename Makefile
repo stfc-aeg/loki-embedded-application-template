@@ -1,31 +1,16 @@
 include .config
 
 # Config settings stored in .config, should be modified by running `makeconfig` in this directory.
-CONFIG_TARGET_VIVADO_VERSION?=v2023.2	# String - set the toolchain version the Makefile will check for
-CONFIG_AUTO_INIT_FIRMWARE_SUBMODULE?=y	# Boolean - set true to init firmware module if empty
-CONFIG_AUTO_INIT_LOKI_SUBMODULE?=y		# Boolean - set true to init loki module if empty
-CONFIG_USE_PREBUILT_HW?=false			# Boolean - set true to use prebuilt hardware instead of garud-fw
-CONFIG_USE_LOCAL_HW_BUILD?=false		# Boolean - set true to use a local hardware build
 
-# Check on Xilinx tools version for the project
-versioncheck: .config
-	CURRENT_VIVADO_VERSION=$(shell vivado -version | head -n 1 | cut -d' ' -f2)
-	ifneq (${CONFIG_TARGET_VIVADO_VERSION}, ${CURRENT_VIVADO_VERSION})
-	$(error Vivado version incorrect, this project uses ${CONFIG_TARGET_VIVADO_VERSION}, and your version is ${CURRENT_VIVADO_VERSION})
-	endif
+## !! Note: Currently I'm using subst to remove the quotes from around any string variables from the config file.
+CONFIG_TARGET_VIVADO_VERSION:=$(subst ",,${CONFIG_TARGET_VIVADO_VERSION})
+CONFIG_VIVADO_HARDWARE_OUTPUT_DIR_RELATIVE:=$(subst ",,${CONFIG_VIVADO_HARDWARE_OUTPUT_DIR_RELATIVE})
+CONFIG_VIVADO_HARDWARE_MAKEFILE_DIR_RELATIVE:=$(subst ",,${CONFIG_VIVADO_HARDWARE_MAKEFILE_DIR_RELATIVE})
+CONFIG_PREBUILT_HW_DIR:=$(subst ",,${CONFIG_PREBUILT_HW_DIR})
+CONFIG_PREBUILT_SW_DIR:=$(subst ",,${CONFIG_PREBUILT_SW_DIR})
+CONFIG_LOKI_DIR:=$(subst ",,${CONFIG_LOKI_DIR})
 
-init_submodules: .config
-	@if [${CONFIG_AUTO_INIT_FIRMWARE_SUBMODULE} = "y" ]; then\
-		git submodule update --init 
-	endif
-
-# Firmware Project
 VIVADO_HARDWARE_OUTPUT_DIR=$(shell pwd)/${CONFIG_VIVADO_HARDWARE_OUTPUT_DIR_RELATIVE}
-
-# LOKI Submodule environment setup
-export LOKI_DIR=./loki/
-export APPLICATION_DIR=.
-export LOKI_ENV_DIR=.
 
 # If (above) environment variable USE_PREBUILT_HW is set, use the prebuilt hardware. Otherwise build the garud-fw project.
 ifeq (${CONFIG_USE_PREBUILT_HW},y)
@@ -52,9 +37,52 @@ endif
 
 all: .config init_submodules versioncheck ${HW_EXPORT_DIR}/design_4cg_2gb.xsa ./machine.env os
 
-.config:
+# Auto-init of submodules depends on submodule sources and whether they are enabled
+ifeq ($(CONFIG_AUTO_INIT_FIRMWARE_SUBMODULE),y)
+ifndef CONFIG_VIVADO_HARDWARE_MAKEFILE_DIR_RELATIVE
+$(error Firmware build from local submodule has been selected, but no location has been found)
+else
+${CONFIG_VIVADO_HARDWARE_MAKEFILE_DIR_RELATIVE}/.git: | .config
+	$(info Local firmware submodule is not initialised, performing first init)
+	$(shell git submodule update --init ${CONFIG_VIVADO_HARDWARE_MAKEFILE_DIR_RELATIVE})
+SUBMODULES_TO_INIT:=${SUBMODULES_TO_INIT} ${CONFIG_VIVADO_HARDWARE_MAKEFILE_DIR_RELATIVE}/.git
+endif
+endif
+
+ifeq ($(CONFIG_AUTO_INIT_LOKI_SUBMODULE),y)
+${CONFIG_LOKI_DIR}/.git: | .config
+	$(info LOKI submodule is not initialised, performing first init)
+	git submodule update --init ${CONFIG_LOKI_DIR}
+	$(warning You will need to run make again now that the sub-makesfiles are included)
+	exit 1
+SUBMODULES_TO_INIT:=${SUBMODULES_TO_INIT} ${CONFIG_LOKI_DIR}/.git
+endif
+init_submodules: ${SUBMODULES_TO_INIT}
+
+# Check on Xilinx tools version for the project
+CURRENT_VIVADO_VERSION=$(shell vivado -version | head -n 1 | cut -d' ' -f2)
+ifndef CONFIG_TARGET_VIVADO_VERSION
+$(info Not checking toolchain version - a target version was not defined)
+else
+ifneq (${CONFIG_TARGET_VIVADO_VERSION},${CURRENT_VIVADO_VERSION})
+$(error Vivado version incorrect, this project uses ${CONFIG_TARGET_VIVADO_VERSION}, and your version is ${CURRENT_VIVADO_VERSION})
+else
+$(info Vivado version verified as matching expected: ${CONFIG_TARGET_VIVADO_VERSION})
+endif
+endif
+
+# LOKI Submodule environment setup
+export LOKI_DIR=./${CONFIG_LOKI_DIR}/
+export APPLICATION_DIR=.
+export LOKI_ENV_DIR=.
+
+
+.config: Kconfig
 	$(info Project is not configured yet, running first-time setup)
 	menuconfig
+	touch .config
+	$(info Project configuration complete- you must now re-run make)
+	exit 1
 
 # Creating this file is in the README but frequently forgotten, and should be done manually
 ./machine.env:
@@ -69,9 +97,9 @@ ${VIVADO_HARDWARE_OUTPUT_DIR}/design_4cg_2gb.xsa:
 
 # Include recipes to take the environment and run the configuration using the autoconf params
 # Provides loki-configure-hw, loki-configure-sw, loki-configure-os
-include ${LOKI_DIR}/config.mk
+include $(wildcard ${LOKI_DIR}/*.mk)
 
-.PHONY: all os hardware software project local_hardware versioncheck
+.PHONY: all os hardware software project local_hardware versioncheck init_submodules
 
 project: loki-configure-hw
 	# Instead of actually building the hardware, just make the project in Vivado and stop.
