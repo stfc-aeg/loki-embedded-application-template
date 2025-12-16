@@ -1,14 +1,27 @@
 menu "Toolchain Configuration"
+    config TARGET_VIVADO_VERSION
+        string "What version of the Xilinx toolchain should this project check is loaded?"
+        default "v2023.2"
 
-config TARGET_VIVADO_VERSION
-    string "What version of the Xilinx toolchain should this project check is loaded?"
-    default "v2023.2"
+    config AUTO_INIT_FIRMWARE_SUBMODULE
+        bool "Automatically init the firmware submodule"
+        help
+            Automatically init the firmware submodule if the directory is found to be empty.
+            If you are using local firmware you will most likely want to this to be left on,
+            so that it initialises after a fresh clone. However, it is not required if you
+            are not using local firmware.
+        default y
+        depends on USE_LOCAL_HW_BUILD
+
+    config AUTO_INIT_LOKI_SUBMODULE
+        bool "Automatically init the LOKI submodule"
+        default y
 endmenu
 
 menu "Hardware Configuration"
     choice
         prompt "Local Build / Prebuilt Select"
-        default USE_LOCAL_HW_BUILD
+        default USE_CORE_HW_BUILD
         config USE_PREBUILT_HW
             bool "Use a prebuilt hardware"
             help
@@ -16,6 +29,13 @@ menu "Hardware Configuration"
 
         config USE_LOCAL_HW_BUILD
             bool "Use a local hardware build"
+            help
+                Use a local Vivado project to build the hardware design
+
+        config USE_CORE_HW_BUILD
+            bool "Use the Core LOKI Hardware Build"
+            help
+                Use the core hardware build from within the LOKI repository
     endchoice
 
     config VIVADO_HARDWARE_OUTPUT_DIR_RELATIVE
@@ -48,6 +68,10 @@ menu "Software"
             bool "Use prebuilt FSBL / PMUFW"
             help
                 Use prebuilt fsbl.elf and pmufw.elf from this project.
+        config USE_LOCAL_SW_BUILD
+            bool "Use a local software build"
+            help
+                Use a local Makefile based build for software.
         config USE_LOKI_BUILD_SW
             bool "Use software build from LOKI Core"
             help
