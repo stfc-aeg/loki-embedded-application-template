@@ -87,9 +87,33 @@ menu "Software"
 
 endmenu
 
-menu "LOKI"
-config LOKI_DIR
-    string "Relative LOKI Submodule Path"
-    default "loki"
+menu "LOKI Core and OS"
+
+    config loki_application_name
+        string "LOKI Application Project Name"
+        default "Unnamed LOKI Project"
+
+    config USE_APPLICATION_YOCTO_LAYER
+        bool "Enable Application Yocto Layer"
+        default n
+
+    config APPLICATION_YOCTO_LAYER_RELATIVE
+        string "Application Yocto Layer Relative Path"
+        default "meta-app"
+        depends on USE_APPLICATION_YOCTO_LAYER
+
+    menu "Advanced"
+        config platform_module_shortname
+            string "Platform module shortname"
+            default "4cg_2gb"
+
+        config platform_carrier
+            string "Carrier board name"
+            default "loki_1_0"
+
+        config LOKI_DIR
+            string "Relative LOKI Submodule Path"
+            default "loki"
+    endmenu
 
 endmenu

@@ -10,6 +10,12 @@ CONFIG_PREBUILT_HW_DIR:=$(subst ",,${CONFIG_PREBUILT_HW_DIR})
 CONFIG_PREBUILT_SW_DIR:=$(subst ",,${CONFIG_PREBUILT_SW_DIR})
 CONFIG_LOKI_DIR:=$(subst ",,${CONFIG_LOKI_DIR})
 
+# These were originally in the repo.env, now saved in repo config
+export platform_module_shortname=${CONFIG_platform_module_shortname}
+export platform_carrier=${CONFIG_platform_carrier}
+export loki_application_version=${CONFIG_loki_application_version}
+export loki_application_name=${CONFIG_loki_application_name}
+
 VIVADO_HARDWARE_OUTPUT_DIR=$(shell pwd)/${CONFIG_VIVADO_HARDWARE_OUTPUT_DIR_RELATIVE}
 
 # If (above) environment variable USE_PREBUILT_HW is set, use the prebuilt hardware. Otherwise build the garud-fw project.
@@ -44,7 +50,7 @@ $(error Firmware build from local submodule has been selected, but no location h
 else
 ${CONFIG_VIVADO_HARDWARE_MAKEFILE_DIR_RELATIVE}/.git: | .config
 	$(info Local firmware submodule is not initialised, performing first init)
-	$(shell git submodule update --init ${CONFIG_VIVADO_HARDWARE_MAKEFILE_DIR_RELATIVE})
+	git submodule update --init ${CONFIG_VIVADO_HARDWARE_MAKEFILE_DIR_RELATIVE}
 SUBMODULES_TO_INIT:=${SUBMODULES_TO_INIT} ${CONFIG_VIVADO_HARDWARE_MAKEFILE_DIR_RELATIVE}/.git
 endif
 endif
@@ -54,7 +60,6 @@ ${CONFIG_LOKI_DIR}/.git: | .config
 	$(info LOKI submodule is not initialised, performing first init)
 	git submodule update --init ${CONFIG_LOKI_DIR}
 	$(warning You will need to run make again now that the sub-makesfiles are included)
-	exit 1
 SUBMODULES_TO_INIT:=${SUBMODULES_TO_INIT} ${CONFIG_LOKI_DIR}/.git
 endif
 init_submodules: ${SUBMODULES_TO_INIT}
@@ -69,6 +74,12 @@ $(error Vivado version incorrect, this project uses ${CONFIG_TARGET_VIVADO_VERSI
 else
 $(info Vivado version verified as matching expected: ${CONFIG_TARGET_VIVADO_VERSION})
 endif
+endif
+
+# Check that the toolchain has been properly sourced
+export XILINX_VIVADO
+ifndef XILINX_VIVADO
+$(error Xilinx Vivado not properly sourced (XILINX_VIVADO undefined)- did you run vivado_env?)
 endif
 
 # LOKI Submodule environment setup
