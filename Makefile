@@ -1,57 +1,142 @@
-# Check on Xilinx tools version for the project
-TARGET_VIVADO_VERSION=v2023.2
-CURRENT_VIVADO_VERSION=$(shell vivado -version | head -n 1 | cut -d' ' -f2)
-ifneq (${TARGET_VIVADO_VERSION}, ${CURRENT_VIVADO_VERSION})
-$(error Vivado version incorrect, this project uses ${TARGET_VIVADO_VERSION}, and your version is ${CURRENT_VIVADO_VERSION})
+$(info LOKI Application Makefile start)
+include .config
+
+# Config settings stored in .config, should be modified by running `makeconfig` in this directory.
+
+## !! Note: Currently I'm using subst to remove the quotes from around any string variables from the config file.
+CONFIG_TARGET_VIVADO_VERSION:=$(subst ",,${CONFIG_TARGET_VIVADO_VERSION})
+CONFIG_VIVADO_HARDWARE_OUTPUT_DIR_RELATIVE:=$(subst ",,${CONFIG_VIVADO_HARDWARE_OUTPUT_DIR_RELATIVE})
+CONFIG_VIVADO_HARDWARE_MAKEFILE_DIR_RELATIVE:=$(subst ",,${CONFIG_VIVADO_HARDWARE_MAKEFILE_DIR_RELATIVE})
+CONFIG_PREBUILT_HW_DIR:=$(subst ",,${CONFIG_PREBUILT_HW_DIR})
+CONFIG_PREBUILT_SW_DIR:=$(subst ",,${CONFIG_PREBUILT_SW_DIR})
+CONFIG_LOKI_DIR:=$(subst ",,${CONFIG_LOKI_DIR})
+CONFIG_platform_module_shortname:=$(subst ",,${CONFIG_platform_module_shortname})
+CONFIG_platform_carrier:=$(subst ",,${CONFIG_platform_carrier})
+CONFIG_loki_application_version:=$(subst ",,${CONFIG_loki_application_version})
+CONFIG_loki_application_name:=$(subst ",,${CONFIG_loki_application_name})
+CONFIG_YOCTO_TMPDIR_PREFIX:=$(subst ",,${CONFIG_YOCTO_TMPDIR_PREFIX})
+
+VIVADO_HARDWARE_OUTPUT_DIR=$(shell pwd)/${CONFIG_VIVADO_HARDWARE_OUTPUT_DIR_RELATIVE}
+
+# If (above) environment variable USE_PREBUILT_HW is set, use the prebuilt hardware. Otherwise build the garud-fw project.
+ifeq (${CONFIG_USE_PREBUILT_HW},y)
+$(info Hardware design from pre-built XSA project from ${CONFIG_PREBUILT_HW_DIR})
+export HW_EXPORT_DIR=$(shell pwd)/${CONFIG_PREBUILT_HW_DIR}
+else ifeq ($(CONFIG_USE_LOCAL_HW_BUILD),y)
+$(info Hardware design will be build from local application-specific project at ${CONFIG_VIVADO_HARDWARE_MAKEFILE_DIR_RELATIVE})
+export HW_EXPORT_DIR=${VIVADO_HARDWARE_OUTPUT_DIR}
+else
+$(info Hardware deisgn will be build from default LOKI Core)
+unexport HW_EXPORT_DIR
 endif
 
-# Default Setup - change these in your calling environment
-USE_PREBUILT_HW ?= false 	# boolean - set true to use prebuilt hardware instead of garud-fw
+ifeq (${CONFIG_USE_PREBUILT_SW},y)
+$(info Low-level software design from pre-built binaries in ${CONFIG_PREBUILT_SW_DIR})
+export SW_EXPORT_DIR=$(shell pwd)/${CONFIG_PREBUILT_SW_DIR}
+else ifeq ($(CONFIG_USE_LOCAL_SW_BUILD),y)
+$(info Low-level software built from local project)
+$(error Local software project not yet supported)
+else
+$(info Low-level software design from default LOKI Core build)
+unexport SW_EXPORT_DIR
+endif
 
-# Firmware Project
-VIVADO_HARDWARE_OUTPUT_DIR=$(shell pwd)/garud-fw/
+all: .config init_submodules versioncheck ${HW_EXPORT_DIR}/design_4cg_2gb.xsa os
+
+# Auto-init of submodules depends on submodule sources and whether they are enabled
+ifeq ($(CONFIG_AUTO_INIT_FIRMWARE_SUBMODULE),y)
+ifndef CONFIG_VIVADO_HARDWARE_MAKEFILE_DIR_RELATIVE
+$(error Firmware build from local submodule has been selected, but no location has been found)
+else
+${CONFIG_VIVADO_HARDWARE_MAKEFILE_DIR_RELATIVE}/.git: | .config
+	$(info Local firmware submodule is not initialised, performing first init)
+	git submodule update --init ${CONFIG_VIVADO_HARDWARE_MAKEFILE_DIR_RELATIVE}
+SUBMODULES_TO_INIT:=${SUBMODULES_TO_INIT} ${CONFIG_VIVADO_HARDWARE_MAKEFILE_DIR_RELATIVE}/.git
+endif
+endif
+
+ifeq ($(CONFIG_AUTO_INIT_LOKI_SUBMODULE),y)
+${CONFIG_LOKI_DIR}/.git: | .config
+	$(info LOKI submodule is not initialised, performing first init)
+	git submodule update --init ${CONFIG_LOKI_DIR}
+	$(warning You will need to run make again now that the sub-makesfiles are included)
+SUBMODULES_TO_INIT:=${SUBMODULES_TO_INIT} ${CONFIG_LOKI_DIR}/.git
+endif
+init_submodules: ${SUBMODULES_TO_INIT}
+
+# Check on Xilinx tools version for the project
+CURRENT_VIVADO_VERSION=$(shell vivado -version | head -n 1 | cut -d' ' -f2)
+ifndef CONFIG_TARGET_VIVADO_VERSION
+$(info Not checking toolchain version - a target version was not defined)
+else
+ifneq (${CONFIG_TARGET_VIVADO_VERSION},${CURRENT_VIVADO_VERSION})
+$(error Vivado version incorrect, this project uses ${CONFIG_TARGET_VIVADO_VERSION}, and your version is ${CURRENT_VIVADO_VERSION})
+else
+$(info Vivado version verified as matching expected: ${CONFIG_TARGET_VIVADO_VERSION})
+endif
+endif
+
+# Check that the toolchain has been properly sourced
+export XILINX_VIVADO
+ifndef XILINX_VIVADO
+$(error Xilinx Vivado not properly sourced (XILINX_VIVADO undefined)- did you run vivado_env?)
+endif
 
 # LOKI Submodule environment setup
-export LOKI_DIR=./loki/
+export LOKI_DIR=./${CONFIG_LOKI_DIR}/
 export APPLICATION_DIR=.
 export LOKI_ENV_DIR=.
 
-# If (above) environment variable USE_PREBUILT_HW is set, use the prebuilt hardware. Otherwise build the garud-fw project.
-ifeq (${USE_PREBUILT_HW},true)
-$(info Building GARUD with prebuilt hardware)
-export HW_EXPORT_DIR=$(shell pwd)/prebuilt
+
+.config: Kconfig
+	$(info Project is not configured yet, running first-time setup)
+	menuconfig
+	touch .config
+	$(info Project configuration complete- you must now re-run make)
+	exit 1
+
+# These were originally in the repo.env, now saved in repo config
+export platform_module_shortname=${CONFIG_platform_module_shortname}
+export platform_carrier=${CONFIG_platform_carrier}
+export loki_application_version=${CONFIG_loki_application_version}
+export loki_application_name=${CONFIG_loki_application_name}
+
+# The TMPDIR can be slightly more complicated, as it has a few options
+ifdef CONFIG_YOCTO_TMPDIR_FORCE_UNIQUE_SUFFIX
+$(info yocto tmpdir using a unique suffix generated by hashing the current working directory)
+YOCTO_TMPDIR_SUFFIX=_$(shell echo $$(pwd | sha256sum 2> /dev/null || echo default) | cut -f 1 -d " ")
 else
-$(info Building GARUD with garud-fw project hardware)
-export HW_EXPORT_DIR=${VIVADO_HARDWARE_OUTPUT_DIR}
+YOCTO_TMPDIR_SUFFIX=
 endif
-export SW_EXPORT_DIR=$(shell pwd)/prebuilt
+export yocto_tmpdir=${CONFIG_YOCTO_TMPDIR_PREFIX}${YOCTO_TMPDIR_SUFFIX}
+$(warning Yocto tmpdir ${yocto_tmpdir})
 
-all: ${HW_EXPORT_DIR}/design_4cg_2gb.xsa ./machine.env os
-
-# Creating this file is in the README but frequently forgotten, and should be done manually
-./machine.env:
-	$(error Your project has no machine.env; you should create this for your specific setup based on machine.env.example)
 
 VIVADO_SOFTWARE_OUTPUT_DIR=???
 # Extra rules to make the prebuilt files in case of hardware design file change.
-#prebuilt/design_4cg_2gb.xsa prebuilt/fsbl.elf prebuilt/pmufw.elf:
 ${VIVADO_HARDWARE_OUTPUT_DIR}/design_4cg_2gb.xsa:
-	$(info Build is using the garud-fw project for hardware)
-	# Build the hardware and software using the garud firmware submodule
-	$(MAKE) -C ./garud-fw/ all
+	$(info Build is using the local project for hardware)
+	# Build the hardware and software using the firmware submodule
+	$(MAKE) -C ./${CONFIG_VIVADO_HARDWARE_MAKEFILE_DIR_RELATIVE}/ all
 
 # Include recipes to take the environment and run the configuration using the autoconf params
 # Provides loki-configure-hw, loki-configure-sw, loki-configure-os
-include ${LOKI_DIR}/config.mk
+${CONFIG_LOKI_DIR}/config.mk: ${CONFIG_LOKI_DIR}/.git
+	# This touch will force it to re-evaulate the include, meaning the entire file will re-run
+	touch ${CONFIG_LOKI_DIR}/config.mk
 
-.PHONY: all os hardware software project local_hardware
+$(info inlcuding ${CONFIG_LOKI_DIR}/config.mk)
+include ${CONFIG_LOKI_DIR}/config.mk
 
-project: loki-configure-hw
+.PHONY: all os hardware software project local_hardware versioncheck init_submodules loki_config_mk
+
+firmware-project:
 	# Instead of actually building the hardware, just make the project in Vivado and stop.
 	# This now prepares the garud-fw project.
-	$(MAKE) -C ./garud-fw/ project
+	$(MAKE) -C  ./${CONFIG_VIVADO_HARDWARE_MAKEFILE_DIR_RELATIVE}/ project
 
 hardware: loki-configure-hw
+	$(info calling the LOKI hardware build with specified XSA location ${HW_EXPORT_DIR})
 	$(MAKE) -C ${LOKI_DIR} hardware
 
 software: loki-configure-sw hardware
