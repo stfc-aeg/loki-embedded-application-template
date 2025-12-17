@@ -1,3 +1,4 @@
+$(info LOKI Application Makefile start)
 include .config
 
 # Config settings stored in .config, should be modified by running `makeconfig` in this directory.
@@ -9,6 +10,10 @@ CONFIG_VIVADO_HARDWARE_MAKEFILE_DIR_RELATIVE:=$(subst ",,${CONFIG_VIVADO_HARDWAR
 CONFIG_PREBUILT_HW_DIR:=$(subst ",,${CONFIG_PREBUILT_HW_DIR})
 CONFIG_PREBUILT_SW_DIR:=$(subst ",,${CONFIG_PREBUILT_SW_DIR})
 CONFIG_LOKI_DIR:=$(subst ",,${CONFIG_LOKI_DIR})
+CONFIG_platform_module_shortname:=$(subst ",,${CONFIG_platform_module_shortname})
+CONFIG_platform_carrier:=$(subst ",,${CONFIG_platform_carrier})
+CONFIG_loki_application_version:=$(subst ",,${CONFIG_loki_application_version})
+CONFIG_loki_application_name:=$(subst ",,${CONFIG_loki_application_name})
 
 # These were originally in the repo.env, now saved in repo config
 export platform_module_shortname=${CONFIG_platform_module_shortname}
@@ -108,16 +113,22 @@ ${VIVADO_HARDWARE_OUTPUT_DIR}/design_4cg_2gb.xsa:
 
 # Include recipes to take the environment and run the configuration using the autoconf params
 # Provides loki-configure-hw, loki-configure-sw, loki-configure-os
-include $(wildcard ${LOKI_DIR}/*.mk)
+${CONFIG_LOKI_DIR}/config.mk: ${CONFIG_LOKI_DIR}/.git
+	# This touch will force it to re-evaulate the include, meaning the entire file will re-run
+	touch ${CONFIG_LOKI_DIR}/config.mk
 
-.PHONY: all os hardware software project local_hardware versioncheck init_submodules
+$(info inlcuding ${CONFIG_LOKI_DIR}/config.mk)
+include ${CONFIG_LOKI_DIR}/config.mk
 
-project: loki-configure-hw
+.PHONY: all os hardware software project local_hardware versioncheck init_submodules loki_config_mk
+
+firmware-project:
 	# Instead of actually building the hardware, just make the project in Vivado and stop.
 	# This now prepares the garud-fw project.
-	$(MAKE) -C ./garud-fw/ project
+	$(MAKE) -C  ./${CONFIG_VIVADO_HARDWARE_MAKEFILE_DIR_RELATIVE}/ project
 
 hardware: loki-configure-hw
+	$(info calling the LOKI hardware build with specified XSA location ${HW_EXPORT_DIR})
 	$(MAKE) -C ${LOKI_DIR} hardware
 
 software: loki-configure-sw hardware
