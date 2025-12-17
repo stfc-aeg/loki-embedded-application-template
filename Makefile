@@ -41,7 +41,7 @@ $(info Low-level software design from default LOKI Core build)
 unexport SW_EXPORT_DIR
 endif
 
-all: .config init_submodules versioncheck ${HW_EXPORT_DIR}/design_4cg_2gb.xsa ./machine.env os
+all: .config init_submodules versioncheck ${HW_EXPORT_DIR}/design_4cg_2gb.xsa os
 
 # Auto-init of submodules depends on submodule sources and whether they are enabled
 ifeq ($(CONFIG_AUTO_INIT_FIRMWARE_SUBMODULE),y)
@@ -94,10 +94,6 @@ export LOKI_ENV_DIR=.
 	touch .config
 	$(info Project configuration complete- you must now re-run make)
 	exit 1
-
-# Creating this file is in the README but frequently forgotten, and should be done manually
-./machine.env:
-	$(error Your project has no machine.env; you should create this for your specific setup based on machine.env.example)
 
 # These were originally in the repo.env, now saved in repo config
 export platform_module_shortname=${CONFIG_platform_module_shortname}
