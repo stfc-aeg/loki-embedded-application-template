@@ -63,7 +63,7 @@ endmenu
 menu "Software"
     choice
         prompt "Low-level software source selection"
-        default USE_LOKI_BUILD_SW
+        default USE_PREBUILT_SW
         config USE_PREBUILT_SW
             bool "Use prebuilt FSBL / PMUFW"
             help
@@ -82,7 +82,7 @@ menu "Software"
         string "Prebuilt low-level software directory"
         help
             Relative directory where prebuilt fsbl.elf and pmufw.elf should be placed.
-        default "prebuilt"
+        default "loki/prebuilt"
         depends on USE_PREBUILT_SW
 
 endmenu
