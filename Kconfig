@@ -21,7 +21,7 @@ endmenu
 menu "Hardware Configuration"
     choice
         prompt "Local Build / Prebuilt Select"
-        default USE_CORE_HW_BUILD
+        default USE_LOCAL_HW_BUILD
         config USE_PREBUILT_HW
             bool "Use a prebuilt hardware"
             help
