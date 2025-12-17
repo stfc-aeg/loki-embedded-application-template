@@ -102,6 +102,18 @@ menu "LOKI Core and OS"
         default "meta-app"
         depends on USE_APPLICATION_YOCTO_LAYER
 
+    config YOCTO_TMPDIR_PREFIX
+        string "Base Location"
+        default "/tmp/loki_tmpdir"
+
+    config YOCTO_TMPDIR_FORCE_UNIQUE_SUFFIX
+        bool "Add a unique suffix to the TMPDIR"
+        default y
+        help
+            Will add a unique suffix to the TMPDIR for this project, to ensure that no other
+            projects will share the same directory. This is almost always wanted to prevent
+            toolchain issues, unless moving a project.
+
     menu "Advanced"
         config platform_module_shortname
             string "Platform module shortname"
