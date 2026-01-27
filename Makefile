@@ -85,8 +85,8 @@ endif
 
 # LOKI Submodule environment setup
 export LOKI_DIR=./${CONFIG_LOKI_DIR}/
-export APPLICATION_DIR=.
-export LOKI_ENV_DIR=.
+export APPLICATION_DIR=$(shell pwd)/.
+export LOKI_ENV_DIR=$(shell pwd).
 
 
 .config: Kconfig
@@ -141,7 +141,7 @@ firmware-project:
 	# This now prepares the garud-fw project.
 	$(MAKE) -C  ./${CONFIG_VIVADO_HARDWARE_MAKEFILE_DIR_RELATIVE}/ project
 
-hardware: loki-configure-hw
+hardware: loki-configure-hw ${HW_EXPORT_DIR}/design_4cg_2gb.xsa
 	$(info calling the LOKI hardware build with specified XSA location ${HW_EXPORT_DIR})
 	$(MAKE) -C ${LOKI_DIR} hardware
 
