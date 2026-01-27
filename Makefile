@@ -15,6 +15,7 @@ CONFIG_platform_carrier:=$(subst ",,${CONFIG_platform_carrier})
 CONFIG_loki_application_version:=$(subst ",,${CONFIG_loki_application_version})
 CONFIG_loki_application_name:=$(subst ",,${CONFIG_loki_application_name})
 CONFIG_YOCTO_TMPDIR_PREFIX:=$(subst ",,${CONFIG_YOCTO_TMPDIR_PREFIX})
+CONFIG_APPLICATION_YOCTO_LAYER_RELATIVE:=$(subst ",,${CONFIG_APPLICATION_YOCTO_LAYER_RELATIVE})
 
 VIVADO_HARDWARE_OUTPUT_DIR=$(shell pwd)/${CONFIG_VIVADO_HARDWARE_OUTPUT_DIR_RELATIVE}
 
@@ -111,6 +112,11 @@ endif
 export yocto_tmpdir=${CONFIG_YOCTO_TMPDIR_PREFIX}${YOCTO_TMPDIR_SUFFIX}
 $(warning Yocto tmpdir ${yocto_tmpdir})
 
+# If custom yocto layer is enabled, use the specified directory.
+ifeq (${CONFIG_USE_APPLICATION_YOCTO_LAYER},y)
+$(info Using a custom yocto layer at relative directory ${CONFIG_APPLICATION_YOCTO_LAYER_RELATIVE})
+export yocto_user_layer_0=$(shell pwd)/${CONFIG_APPLICATION_YOCTO_LAYER_RELATIVE}
+endif
 
 VIVADO_SOFTWARE_OUTPUT_DIR=???
 # Extra rules to make the prebuilt files in case of hardware design file change.
