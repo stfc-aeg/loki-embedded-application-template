@@ -127,7 +127,7 @@ ${VIVADO_HARDWARE_OUTPUT_DIR}/design_4cg_2gb.xsa:
 
 # Include recipes to take the environment and run the configuration using the autoconf params
 # Provides loki-configure-hw, loki-configure-sw, loki-configure-os
-${CONFIG_LOKI_DIR}/config.mk: ${CONFIG_LOKI_DIR}/.git
+${CONFIG_LOKI_DIR}/config.mk: .config ${CONFIG_LOKI_DIR}/.git
 	# This touch will force it to re-evaulate the include, meaning the entire file will re-run
 	touch ${CONFIG_LOKI_DIR}/config.mk
 
