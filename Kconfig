@@ -63,7 +63,7 @@ endmenu
 menu "Software"
     choice
         prompt "Low-level software source selection"
-        default USE_PREBUILT_SW
+        default USE_LOKI_BUILD_SW
         config USE_PREBUILT_SW
             bool "Use prebuilt FSBL / PMUFW"
             help
