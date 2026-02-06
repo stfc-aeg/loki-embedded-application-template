@@ -82,7 +82,7 @@ menu "Software"
         string "Prebuilt low-level software directory"
         help
             Relative directory where prebuilt fsbl.elf and pmufw.elf should be placed.
-        default "loki/prebuilt"
+        default "./prebuilt"
         depends on USE_PREBUILT_SW
 
 endmenu
