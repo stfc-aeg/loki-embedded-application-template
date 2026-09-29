@@ -40,6 +40,12 @@ git fetch template
 git merge template/master --allow-unrelated-histories
 ```
 
+You will probably also want to ignore any changes to the `README.md` in favour of your own:
+
+```bash
+git checkout -- README.md
+```
+
 Good luck!
 
 ## Clone
