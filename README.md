@@ -71,6 +71,9 @@ This should launch you into a TUI. Options can be navigated with direction arrow
   
 From here, `q` will exit the generation; you should save the result.
 
+> [!NOTE]
+> Do not be alarmed if you see an error complaining about `config.mk`. This is a bug; the `make` command when executed for the build should run fine the second time.
+
 ### 5. Build the project
 
 In future (and on a fresh clone of your project) this is the only step you should have to repeat.
