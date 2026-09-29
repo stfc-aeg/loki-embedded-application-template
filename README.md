@@ -11,8 +11,101 @@ This template allows for the creation of an application repository with the foll
 
 This project uses versions of LOKI v2.0.3+, and Xilinx toolchain 2023-2.
 
-## Creating a Repository from this Template
-#TODO
+## Creating a Application from this Template
+
+### 1. Create a new repository using this template
+
+1. Browse to the [main page of this repo on GitHub](https://github.com/stfc-aeg/loki-embedded-application-template) **while logged in** and click the drop-down that says *Use this template*
+2. Select *Create a new repository*
+3. Give your project a unique name, by convention `projectname-embedded`
+4. Click on *Create Repository*
+
+### 2. Update your `README.md`
+
+The `README` will be this one from the template repository- you will most likely want to update this to reflect the target project.
+
+### 3. Pull your project locally
+
+To develop on this project you will need to clone it locally on a machine that has the Xilinx 2023-2 toolchain.
+
+```bash
+git clone git@github.com:MYPROJECTNAME.git
+cd MYPROJECTNAME
+```
+
+#### Environment Setup
+
+Load the Xilinx 2023-2 toolchain.
+To do this as DSSG, run:
+
+```bash
+module load xilinx/2023-2
+vivado_env
+vitis_env
+petalinux_env
+```
+
+The Makefile will check tool versions are correct as part of the build.
+
+### 4. Perform first-time configuration with `menuconfig`.
+
+The first time you run the build tools, you will be prompted to set up the project with the `menuconfig`.
+
+> [!NOTE]
+> You will also need the tool `menuconfig` or the python module `menuconfig` (part of `kconfiglib`) installed on your system to run the project configuration tool the first time you set up your project. If you can't run `python -m menuconfig`, try `pip install --user kconfiglib`.
+
+```bash
+make
+```
+
+This should launch you into a TUI. Options can be navigated with direction arrows, and `?` will give you more information about some options.
+
+1. Under toolchain configuration, check the tool version. The defaults are most likely fine here, but if you know you are not using the default firmware project you can prevent it from being needlessly pulled.
+2. Under hardware configuration you can choose the directory name that will be used to run the firmware build Makefile, and where the build system will look for results. Again, defaults should be fine unless you're using a custom submodule or subdirectory. You can also choose to use pre-built firmware (XSA) under `Local Build /  Prebuilt Select`.
+3. Under Software you can shoose if you would like to provide a custom FSBL/PMUFW. You almost certainly just want to stick with the core LOKI build, as this has now been brought under the control of PetaLinux
+4. **MOST LIKELY CHANGES**
+   1. Give your project a name- this should not be changed on a whim as it will be built into the image
+   2. If you have a local Yocto layer for software for your application, tick the `Enable Application Yocto Layer` box. This will allow  you to specify a local directory name for it, and it will be included in the build.
+   3. Optionally you can change the base TMPDIR root location. It is unlikely you want to do this
+   4. You can disable the automatic unique temporary directory feature, but this is discouraged to prevent collisions.
+  
+From here, `q` will exit the generation; you should save the result.
+
+### 5. Build the project
+
+In future (and on a fresh clone of your project) this is the only step you should have to repeat.
+Ensure (as above) you have the Xilinx tools loaded.
+
+On first run (unless deactivated) the core repositories will be pulled automatically.
+
+> [!WARNING]
+> BEFORE YOU RUN THIS, make sure you have used ssh agent to load keys used for github clones. It will fail without prompt for a password.
+
+#### **OPTIONAL:** Create Firmware Project Only (for editing)
+
+If you are just building the project, it is not necessary to run this step separately; it will simply save time by only creating the Vivado project for `loki-firmware` and then stopping.
+
+```bash
+make firmware-project
+```
+
+This will create the `loki-firmware/firmware/firmware.xpr` project file, which can be opened in Vivado.
+
+#### Whole Project
+
+```bash
+make
+```
+
+> [!NOTE]
+> At this time, the FSBL / PMUFW is only being used as a prebuilt file, as the current LOKI 2023 toolchain is broken for Vitis.
+
+On successive builds having modified only the control software, only the PetaLinux build should re-run.
+
+The build files required for the board are in `./loki/os/petalinux-custom/images/linux/`:
+- `image.ub` is the main Linux image. If there is an existing file, this can simply replace it to update the system
+- `BOOT.BIN` is the customised U-Boot Bootloader, which is required but is unlikely to change unless the LOKI tag has been upated
+- `boot.scr` is the U-Boot script, which is required but is unlikely to change unless the LOKI tag has been upated
 
 ## How to Update to a later template
 
@@ -48,62 +141,5 @@ git reset README.md; git checkout -- README.md
 
 Good luck!
 
-## Clone
 
-Clone the repository (using a tag if necessary):
-
-```bash
-git clone git@github.com:stfc-aeg/loki-embedded-application-template.git
-```
-*Your repository will have a different name*
-
-## Repository Setup
-
-### Environment Setup
-
-Load the Xilinx 2023-2 toolchain.
-To do this as DSSG, run:
-
-```bash
-module load xilinx/2023-2
-vivado_env
-vitis_env
-petalinux_env
-```
-
-The Makefile will check tool versions are correct as part of the build.
-
-## Build 
-
-### Create Firmware Project Only (for editing)
-
-If you are just building the project, it is not necessary to run this step separately; it will simply save time by only creating the Vivado project for `loki-firmware` and then stopping.
-
-```bash
-make firmware-project
-```
-
-This will create the `loki-firmware/firmware/firmware.xpr` project file, which can be opened in Vivado.
-
-### Whole Project
-
-> [!WARNING]
-> BEFORE YOU RUN THIS, make sure you have used ssh agent to load keys used for github clones. It will fail without prompt for a password.
-
-> [!NOTE]
-> You will also need the tool `menuconfig` or the python module `menuconfig` (part of `kconfiglib`) installed on your system to run the project configuration tool the first time you set up your project. If you can't run `python -m menuconfig`, try `pip install --user kconfiglib`.
-
-```bash
-make
-```
-
-> [!NOTE]
-> At this time, the FSBL / PMUFW is only being used as a prebuilt file, as the current LOKI 2023 toolchain is broken for Vitis.
-
-On successive builds having modified only the control software, only the PetaLinux build should re-run.
-
-The build files required for the board are in `./loki/os/petalinux-custom/images/linux/`:
-- `image.ub` is the main Linux image. If there is an existing file, this can simply replace it to update the system
-- `BOOT.BIN` is the customised U-Boot Bootloader, which is required but is unlikely to change unless the LOKI tag has been upated
-- `boot.scr` is the U-Boot script, which is required but is unlikely to change unless the LOKI tag has been upated
 
