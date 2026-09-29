@@ -57,7 +57,7 @@ This will create the `loki-firmware/firmware/firmware.xpr` project file, which c
 > [!WARNING]
 > BEFORE YOU RUN THIS, make sure you have used ssh agent to load keys used for github clones. It will fail without prompt for a password.
 
-> [!INFO]
+> [!NOTE]
 > You will also need the tool `menuconfig` or the python module `menuconfig` (part of `kconfiglib`) installed on your system to run the project configuration tool the first time you set up your project. If you can't run `python -m menuconfig`, try `pip install --user kconfiglib`.
 
 ```bash
