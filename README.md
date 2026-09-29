@@ -31,12 +31,12 @@ Otherwise, run the following:
 
 ```bash
 git remote add template git@github.com:stfc-aeg/loki-embedded-application-template.git
-git fetch template
 ```
 
 To merge the latest template into your current branch:
 
 ```bash
+git fetch template
 git merge template/master --allow-unrelated-histories
 ```
 
