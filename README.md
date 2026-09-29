@@ -14,6 +14,34 @@ This project uses versions of LOKI v2.0.3+, and Xilinx toolchain 2023-2.
 ## Creating a Repository from this Template
 #TODO
 
+## How to Update to a later template
+
+> [!WARNING]
+> Be prepared to deal with merge conflicts!
+
+First, check if you already have more than one remote:
+
+```bash
+git remote
+```
+
+If you see both `origin` and `template`, you are good to go.
+
+Otherwise, run the following:
+
+```bash
+git remote add template git@github.com:stfc-aeg/loki-embedded-application-template.git
+git fetch template
+```
+
+To merge the latest template into your current branch:
+
+```bash
+git merge template/master --allow-unrelated-histories
+```
+
+Good luck!
+
 ## Clone
 
 Clone the repository (using a tag if necessary):
@@ -24,7 +52,6 @@ git clone git@github.com:stfc-aeg/loki-embedded-application-template.git
 *Your repository will have a different name*
 
 ## Repository Setup
-
 
 ### Environment Setup
 
