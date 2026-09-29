@@ -43,7 +43,7 @@ git merge template/master --allow-unrelated-histories
 You will probably also want to ignore any changes to the `README.md` in favour of your own:
 
 ```bash
-git checkout -- README.md
+git reset README.md; git checkout -- README.md
 ```
 
 Good luck!
