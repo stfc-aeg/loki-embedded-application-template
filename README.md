@@ -17,7 +17,7 @@ This project uses versions of LOKI v2.0.3+, and Xilinx toolchain 2023-2.
 ## How to Update to a later template
 
 > [!WARNING]
-> Be prepared to deal with merge conflicts!
+> Be prepared to deal with merge conflicts! This should not commonly be performed unless there are serious compatibility issues in Makefiles or the build system.
 
 First, check if you already have more than one remote:
 
