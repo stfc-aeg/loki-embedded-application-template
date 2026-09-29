@@ -19,6 +19,9 @@ CONFIG_APPLICATION_YOCTO_LAYER_RELATIVE:=$(subst ",,${CONFIG_APPLICATION_YOCTO_L
 
 VIVADO_HARDWARE_OUTPUT_DIR=$(shell pwd)/${CONFIG_VIVADO_HARDWARE_OUTPUT_DIR_RELATIVE}
 
+# If MENUCONFIG variable is note defined, use the python module entrypoint
+MENUCONFIG?=python -m menuconfig
+
 # If (above) environment variable USE_PREBUILT_HW is set, use the prebuilt hardware. Otherwise build the garud-fw project.
 ifeq (${CONFIG_USE_PREBUILT_HW},y)
 $(info Hardware design from pre-built XSA project from ${CONFIG_PREBUILT_HW_DIR})
@@ -91,7 +94,7 @@ export LOKI_ENV_DIR=$(shell pwd).
 
 .config: Kconfig
 	$(info Project is not configured yet, running first-time setup)
-	menuconfig
+	${MENUCONFIG}
 	touch .config
 	$(info Project configuration complete- you must now re-run make)
 	exit 1
