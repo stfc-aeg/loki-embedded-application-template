@@ -74,6 +74,9 @@ From here, `q` will exit the generation; you should save the result.
 > [!NOTE]
 > Do not be alarmed if you see an error complaining about `config.mk`. This is a bug; the `make` command when executed for the build should run fine the second time.
 
+This configuration will  now be saved in `.config`, a file which you should include in your repository so that settings persist.
+You should not *need* to run the configuration again, but if you need to alter any settings (for example if you are adding a user layer for Yocto that wasn't initially included) run `menuconfig` or `python -m menuconfig` to re-enter the TUI.
+
 ### 5. Build the project
 
 In future (and on a fresh clone of your project) this is the only step you should have to repeat.
@@ -109,6 +112,11 @@ The build files required for the board are in `./loki/os/petalinux-custom/images
 - `image.ub` is the main Linux image. If there is an existing file, this can simply replace it to update the system
 - `BOOT.BIN` is the customised U-Boot Bootloader, which is required but is unlikely to change unless the LOKI tag has been upated
 - `boot.scr` is the U-Boot script, which is required but is unlikely to change unless the LOKI tag has been upated
+
+### 6. Alter the project for your needs!
+
+Go to https://github.com/stfc-aeg/loki/wiki/Yocto-Layer-for-Odin-Control to find out more about creating a new Yocto layer for your project.
+You can then include the layer in the build from within the `menuconfig` TUI.
 
 ## How to Update to a later template
 
