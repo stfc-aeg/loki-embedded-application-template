@@ -58,6 +58,15 @@ menu "Hardware Configuration"
             Relative directory where prebuilt *.xsa hardware file should be placed
         default "prebuilt"
         depends on USE_PREBUILT_HW
+
+    config XSA_FILENAME
+        string "Full .xsa filename for prebuilt and firmware submodule output"
+        help
+            This name should be the full filename either of the prebuilt XSA
+            file you already have, or the expected filename of the firmware
+            project output. No path.
+        default "firmware.xsa"
+        depends on !USE_CORE_HW_BUILD
 endmenu
 
 menu "Software"
