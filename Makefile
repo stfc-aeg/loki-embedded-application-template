@@ -49,7 +49,7 @@ $(info Low-level software design from default LOKI Core build)
 unexport SW_EXPORT_DIR
 endif
 
-all: .config init_submodules versioncheck ${HW_EXPORT_DIR}/design_4cg_2gb.xsa os
+all: .config init_submodules versioncheck ${HW_EXPORT_DIR}/${XSA_FILENAME} os
 
 # Auto-init of submodules depends on submodule sources and whether they are enabled
 ifeq ($(CONFIG_AUTO_INIT_FIRMWARE_SUBMODULE),y)
@@ -127,7 +127,7 @@ endif
 
 VIVADO_SOFTWARE_OUTPUT_DIR=???
 # Extra rules to make the prebuilt files in case of hardware design file change.
-${VIVADO_HARDWARE_OUTPUT_DIR}/design_4cg_2gb.xsa:
+${VIVADO_HARDWARE_OUTPUT_DIR}/${XSA_FILENAME}:
 	$(info Build is using the local project for hardware)
 	# Build the hardware and software using the firmware submodule
 	$(MAKE) -C ./${CONFIG_VIVADO_HARDWARE_MAKEFILE_DIR_RELATIVE}/ all
