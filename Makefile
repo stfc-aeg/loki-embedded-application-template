@@ -54,7 +54,7 @@ $(error Firmware build from local submodule has been selected, but no location h
 else
 ${CONFIG_VIVADO_HARDWARE_MAKEFILE_DIR_RELATIVE}/.git: | .config
 	$(info Local firmware submodule is not initialised, performing first init)
-	git submodule update --init ${CONFIG_VIVADO_HARDWARE_MAKEFILE_DIR_RELATIVE}
+	git submodule update --init --recursive ${CONFIG_VIVADO_HARDWARE_MAKEFILE_DIR_RELATIVE}
 SUBMODULES_TO_INIT:=${SUBMODULES_TO_INIT} ${CONFIG_VIVADO_HARDWARE_MAKEFILE_DIR_RELATIVE}/.git
 endif
 endif
@@ -62,7 +62,7 @@ endif
 ifeq ($(CONFIG_AUTO_INIT_LOKI_SUBMODULE),y)
 ${CONFIG_LOKI_DIR}/.git: | .config
 	$(info LOKI submodule is not initialised, performing first init)
-	git submodule update --init ${CONFIG_LOKI_DIR}
+	git submodule update --init --recursive ${CONFIG_LOKI_DIR}
 	$(warning You will need to run make again now that the sub-makesfiles are included)
 SUBMODULES_TO_INIT:=${SUBMODULES_TO_INIT} ${CONFIG_LOKI_DIR}/.git
 endif
