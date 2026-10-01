@@ -9,7 +9,7 @@ CONFIG_VIVADO_HARDWARE_OUTPUT_DIR_RELATIVE:=$(subst ",,${CONFIG_VIVADO_HARDWARE_
 CONFIG_VIVADO_HARDWARE_MAKEFILE_DIR_RELATIVE:=$(subst ",,${CONFIG_VIVADO_HARDWARE_MAKEFILE_DIR_RELATIVE})
 CONFIG_PREBUILT_HW_DIR:=$(subst ",,${CONFIG_PREBUILT_HW_DIR})
 CONFIG_PREBUILT_SW_DIR:=$(subst ",,${CONFIG_PREBUILT_SW_DIR})
-CONFIG_XSA_FILENAME:=$(subst ",,${CONFIG_VIVADO_XSA_NAME})
+CONFIG_XSA_FILENAME:=$(subst ",,${CONFIG_XSA_FILENAME})
 CONFIG_LOKI_DIR:=$(subst ",,${CONFIG_LOKI_DIR})
 CONFIG_platform_module_shortname:=$(subst ",,${CONFIG_platform_module_shortname})
 CONFIG_platform_carrier:=$(subst ",,${CONFIG_platform_carrier})
@@ -25,11 +25,11 @@ MENUCONFIG?=python -m menuconfig
 
 # If (above) environment variable USE_PREBUILT_HW is set, use the prebuilt hardware. Otherwise build the garud-fw project.
 ifeq (${CONFIG_USE_PREBUILT_HW},y)
-$(info Hardware design from pre-built XSA project from ${CONFIG_PREBUILT_HW_DIR})
+$(info Hardware design from pre-built XSA project from ${CONFIG_PREBUILT_HW_DIR} filename ${CONFIG_XSA_FILENAME})
 export HW_EXPORT_DIR=$(shell pwd)/${CONFIG_PREBUILT_HW_DIR}
 export XSA_FILENAME=${CONFIG_XSA_FILENAME}
 else ifeq ($(CONFIG_USE_LOCAL_HW_BUILD),y)
-$(info Hardware design will be build from local application-specific project at ${CONFIG_VIVADO_HARDWARE_MAKEFILE_DIR_RELATIVE})
+$(info Hardware design will be build from local application-specific project at ${CONFIG_VIVADO_HARDWARE_MAKEFILE_DIR_RELATIVE}, built to ${CONFIG_XSA_FILENAME})
 export HW_EXPORT_DIR=${VIVADO_HARDWARE_OUTPUT_DIR}
 export XSA_FILENAME=${CONFIG_XSA_FILENAME}
 else
