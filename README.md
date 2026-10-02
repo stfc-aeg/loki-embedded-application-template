@@ -108,7 +108,7 @@ make
 
 On successive builds having modified only the control software, only the PetaLinux build should re-run.
 
-The build files required for the board are in `./loki/os/petalinux-custom/images/linux/`:
+The build files required for the board are in `./loki/os/petalinux-custom/build/images/linux/`:
 - `image.ub` is the main Linux image. If there is an existing file, this can simply replace it to update the system
 - `BOOT.BIN` is the customised U-Boot Bootloader, which is required but is unlikely to change unless the LOKI tag has been upated
 - `boot.scr` is the U-Boot script, which is required but is unlikely to change unless the LOKI tag has been upated
