@@ -73,12 +73,11 @@ SUBMODULES_TO_INIT:=${SUBMODULES_TO_INIT} ${CONFIG_LOKI_DIR}/.git
 endif
 init_submodules: ${SUBMODULES_TO_INIT}
 
-# Target specific rule will ignore toolchain checks on the external host
-docker: SKIP_TOOLCHAIN_CHECK=1
-
 # Check vivado version and sourcing unless disabled. Performing the docker
-# build will disable this.
-ifndef SKIP_TOOLCHAIN_CHECK
+# build will disable this. This slightly strange syntax will mean the check
+# is performed either if the skip env varible is NOT defined, or if docker
+# is a target being called.
+ifeq ($(strip $(SKIP_TOOLCHAIN_CHECK)) $(filter docker,$(MAKECMDGOALS)),)
 
 # Check on Xilinx tools version for the project
 CURRENT_VIVADO_VERSION=$(shell vivado -version | head -n 1 | cut -d' ' -f2)
