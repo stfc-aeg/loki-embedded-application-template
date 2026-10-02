@@ -150,6 +150,9 @@ You will probably also want to ignore any changes to the `README.md` in favour o
 git reset README.md; git checkout -- README.md
 ```
 
+> [!NOTE]
+> Note that if the submodules have changed, you'll need to run `git submodule update --init --recursive` for them to actually be pulled.
+
 Good luck!
 
 
