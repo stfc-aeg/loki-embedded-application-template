@@ -9,6 +9,7 @@ CONFIG_VIVADO_HARDWARE_OUTPUT_DIR_RELATIVE:=$(subst ",,${CONFIG_VIVADO_HARDWARE_
 CONFIG_VIVADO_HARDWARE_MAKEFILE_DIR_RELATIVE:=$(subst ",,${CONFIG_VIVADO_HARDWARE_MAKEFILE_DIR_RELATIVE})
 CONFIG_PREBUILT_HW_DIR:=$(subst ",,${CONFIG_PREBUILT_HW_DIR})
 CONFIG_PREBUILT_SW_DIR:=$(subst ",,${CONFIG_PREBUILT_SW_DIR})
+CONFIG_XSA_FILENAME:=$(subst ",,${CONFIG_XSA_FILENAME})
 CONFIG_LOKI_DIR:=$(subst ",,${CONFIG_LOKI_DIR})
 CONFIG_platform_module_shortname:=$(subst ",,${CONFIG_platform_module_shortname})
 CONFIG_platform_carrier:=$(subst ",,${CONFIG_platform_carrier})
@@ -24,14 +25,17 @@ MENUCONFIG?=python -m menuconfig
 
 # If (above) environment variable USE_PREBUILT_HW is set, use the prebuilt hardware. Otherwise build the garud-fw project.
 ifeq (${CONFIG_USE_PREBUILT_HW},y)
-$(info Hardware design from pre-built XSA project from ${CONFIG_PREBUILT_HW_DIR})
+$(info Hardware design from pre-built XSA project from ${CONFIG_PREBUILT_HW_DIR} filename ${CONFIG_XSA_FILENAME})
 export HW_EXPORT_DIR=$(shell pwd)/${CONFIG_PREBUILT_HW_DIR}
+export XSA_FILENAME=${CONFIG_XSA_FILENAME}
 else ifeq ($(CONFIG_USE_LOCAL_HW_BUILD),y)
-$(info Hardware design will be build from local application-specific project at ${CONFIG_VIVADO_HARDWARE_MAKEFILE_DIR_RELATIVE})
+$(info Hardware design will be build from local application-specific project at ${CONFIG_VIVADO_HARDWARE_MAKEFILE_DIR_RELATIVE}, built to ${CONFIG_XSA_FILENAME})
 export HW_EXPORT_DIR=${VIVADO_HARDWARE_OUTPUT_DIR}
+export XSA_FILENAME=${CONFIG_XSA_FILENAME}
 else
 $(info Hardware deisgn will be build from default LOKI Core)
 unexport HW_EXPORT_DIR
+unexport XSA_FILENAME
 endif
 
 ifeq (${CONFIG_USE_PREBUILT_SW},y)
@@ -45,7 +49,7 @@ $(info Low-level software design from default LOKI Core build)
 unexport SW_EXPORT_DIR
 endif
 
-all: .config init_submodules versioncheck ${HW_EXPORT_DIR}/design_4cg_2gb.xsa os
+all: .config init_submodules versioncheck ${HW_EXPORT_DIR}/${XSA_FILENAME} os
 
 # Auto-init of submodules depends on submodule sources and whether they are enabled
 ifeq ($(CONFIG_AUTO_INIT_FIRMWARE_SUBMODULE),y)
@@ -54,7 +58,7 @@ $(error Firmware build from local submodule has been selected, but no location h
 else
 ${CONFIG_VIVADO_HARDWARE_MAKEFILE_DIR_RELATIVE}/.git: | .config
 	$(info Local firmware submodule is not initialised, performing first init)
-	git submodule update --init ${CONFIG_VIVADO_HARDWARE_MAKEFILE_DIR_RELATIVE}
+	git submodule update --init --recursive ${CONFIG_VIVADO_HARDWARE_MAKEFILE_DIR_RELATIVE}
 SUBMODULES_TO_INIT:=${SUBMODULES_TO_INIT} ${CONFIG_VIVADO_HARDWARE_MAKEFILE_DIR_RELATIVE}/.git
 endif
 endif
@@ -62,7 +66,7 @@ endif
 ifeq ($(CONFIG_AUTO_INIT_LOKI_SUBMODULE),y)
 ${CONFIG_LOKI_DIR}/.git: | .config
 	$(info LOKI submodule is not initialised, performing first init)
-	git submodule update --init ${CONFIG_LOKI_DIR}
+	git submodule update --init --recursive ${CONFIG_LOKI_DIR}
 	$(warning You will need to run make again now that the sub-makesfiles are included)
 SUBMODULES_TO_INIT:=${SUBMODULES_TO_INIT} ${CONFIG_LOKI_DIR}/.git
 endif
@@ -123,7 +127,7 @@ endif
 
 VIVADO_SOFTWARE_OUTPUT_DIR=???
 # Extra rules to make the prebuilt files in case of hardware design file change.
-${VIVADO_HARDWARE_OUTPUT_DIR}/design_4cg_2gb.xsa:
+${VIVADO_HARDWARE_OUTPUT_DIR}/${XSA_FILENAME}:
 	$(info Build is using the local project for hardware)
 	# Build the hardware and software using the firmware submodule
 	$(MAKE) -C ./${CONFIG_VIVADO_HARDWARE_MAKEFILE_DIR_RELATIVE}/ all
@@ -144,7 +148,7 @@ firmware-project:
 	# This now prepares the garud-fw project.
 	$(MAKE) -C  ./${CONFIG_VIVADO_HARDWARE_MAKEFILE_DIR_RELATIVE}/ project
 
-hardware: loki-configure-hw ${HW_EXPORT_DIR}/design_4cg_2gb.xsa
+hardware: loki-configure-hw ${HW_EXPORT_DIR}/${XSA_FILENAME}
 	$(info calling the LOKI hardware build with specified XSA location ${HW_EXPORT_DIR})
 	$(MAKE) -C ${LOKI_DIR} hardware
 
