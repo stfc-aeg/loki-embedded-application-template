@@ -59,6 +59,7 @@ else
 ${CONFIG_VIVADO_HARDWARE_MAKEFILE_DIR_RELATIVE}/.git: | .config
 	$(info Local firmware submodule is not initialised, performing first init)
 	git submodule update --init --recursive ${CONFIG_VIVADO_HARDWARE_MAKEFILE_DIR_RELATIVE}
+
 SUBMODULES_TO_INIT:=${SUBMODULES_TO_INIT} ${CONFIG_VIVADO_HARDWARE_MAKEFILE_DIR_RELATIVE}/.git
 endif
 endif
@@ -71,6 +72,13 @@ ${CONFIG_LOKI_DIR}/.git: | .config
 SUBMODULES_TO_INIT:=${SUBMODULES_TO_INIT} ${CONFIG_LOKI_DIR}/.git
 endif
 init_submodules: ${SUBMODULES_TO_INIT}
+
+# Target specific rule will ignore toolchain checks on the external host
+docker: SKIP_TOOLCHAIN_CHECK=1
+
+# Check vivado version and sourcing unless disabled. Performing the docker
+# build will disable this.
+ifndef SKIP_TOOLCHAIN_CHECK
 
 # Check on Xilinx tools version for the project
 CURRENT_VIVADO_VERSION=$(shell vivado -version | head -n 1 | cut -d' ' -f2)
@@ -88,6 +96,11 @@ endif
 export XILINX_VIVADO
 ifndef XILINX_VIVADO
 $(error Xilinx Vivado not properly sourced (XILINX_VIVADO undefined)- did you run vivado_env?)
+endif
+
+else
+$(info Skipped toolchain sourcing and version check)
+#SKIP_TOOLCHAIN_CHECK endif
 endif
 
 # LOKI Submodule environment setup
@@ -158,6 +171,13 @@ software: loki-configure-sw hardware
 os: loki-configure-os software
 	$(MAKE) -C ${LOKI_DIR} os
 
+docker: .config init_submodules
+	# This will build the project from within docker instead of using local tools.
+	# This is intended for an already configured project and will run headless - there
+	# Menuconfig and submodule pulling should happen before the docker build is called,
+	# so there is no need to pass in keys. The .config should already be present.
+	docker compose up --build
+
 mostlyclean:
 	unset HW_EXPORT_DIR
 	$(MAKE) -C ${LOKI_DIR} mostlyclean
@@ -169,10 +189,12 @@ clean:
 	$(MAKE) -C ./garud-fw/ clean
 
 distclean:
+	docker compose down -v
 	unset HW_EXPORT_DIR
 	$(MAKE) -C ${LOKI_DIR} distclean
 	$(MAKE) -C ./garud-fw/ distclean
 
 clobber:
+	docker compose down -v
 	unset HW_EXPORT_DIR
 	$(MAKE) -C ${LOKI_DIR} clobber
