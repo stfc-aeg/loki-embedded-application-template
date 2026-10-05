@@ -23,7 +23,7 @@ VIVADO_HARDWARE_OUTPUT_DIR=$(shell pwd)/${CONFIG_VIVADO_HARDWARE_OUTPUT_DIR_RELA
 # If MENUCONFIG variable is note defined, use the python module entrypoint
 MENUCONFIG?=python -m menuconfig
 
-# If (above) environment variable USE_PREBUILT_HW is set, use the prebuilt hardware. Otherwise build the garud-fw project.
+# If (above) environment variable USE_PREBUILT_HW is set, use the prebuilt hardware. Otherwise build the firmware project.
 ifeq (${CONFIG_USE_PREBUILT_HW},y)
 $(info Hardware design from pre-built XSA project from ${CONFIG_PREBUILT_HW_DIR} filename ${CONFIG_XSA_FILENAME})
 export HW_EXPORT_DIR=$(shell pwd)/${CONFIG_PREBUILT_HW_DIR}
@@ -145,7 +145,7 @@ include ${CONFIG_LOKI_DIR}/config.mk
 
 firmware-project:
 	# Instead of actually building the hardware, just make the project in Vivado and stop.
-	# This now prepares the garud-fw project.
+	# This now prepares the firmware project.
 	$(MAKE) -C  ./${CONFIG_VIVADO_HARDWARE_MAKEFILE_DIR_RELATIVE}/ project
 
 hardware: loki-configure-hw ${HW_EXPORT_DIR}/${XSA_FILENAME}
@@ -161,17 +161,17 @@ os: loki-configure-os software
 mostlyclean:
 	unset HW_EXPORT_DIR
 	$(MAKE) -C ${LOKI_DIR} mostlyclean
-	$(MAKE) -C ./garud-fw/ mostlyclean
+	$(MAKE) -C ${CONFIG_VIVADO_HARDWARE_MAKEFILE_DIR_RELATIVE} mostlyclean
 
 clean:
 	unset HW_EXPORT_DIR
 	$(MAKE) -C ${LOKI_DIR} clean
-	$(MAKE) -C ./garud-fw/ clean
+	$(MAKE) -C ${CONFIG_VIVADO_HARDWARE_MAKEFILE_DIR_RELATIVE} clean
 
 distclean:
 	unset HW_EXPORT_DIR
 	$(MAKE) -C ${LOKI_DIR} distclean
-	$(MAKE) -C ./garud-fw/ distclean
+	$(MAKE) -C ${CONFIG_VIVADO_HARDWARE_MAKEFILE_DIR_RELATIVE} distclean
 
 clobber:
 	unset HW_EXPORT_DIR
