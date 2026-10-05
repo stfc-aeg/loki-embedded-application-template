@@ -42,7 +42,7 @@ menu "Hardware Configuration"
         string "Local hardware build output directory"
         help
             Relative directory where *.xsa hardware file will be built to when using local build.
-        default "garud-fw"
+        default "loki-fw-default"
         depends on USE_LOCAL_HW_BUILD
 
     config VIVADO_HARDWARE_MAKEFILE_DIR_RELATIVE
