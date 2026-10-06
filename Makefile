@@ -10,6 +10,7 @@ CONFIG_VIVADO_HARDWARE_MAKEFILE_DIR_RELATIVE:=$(subst ",,${CONFIG_VIVADO_HARDWAR
 CONFIG_PREBUILT_HW_DIR:=$(subst ",,${CONFIG_PREBUILT_HW_DIR})
 CONFIG_PREBUILT_SW_DIR:=$(subst ",,${CONFIG_PREBUILT_SW_DIR})
 CONFIG_XSA_FILENAME:=$(subst ",,${CONFIG_XSA_FILENAME})
+CONFIG_FIRMWARE_DTSI_FILENAME:=$(subst ",,${CONFIG_FIRMWARE_DTSI_FILENAME})
 CONFIG_LOKI_DIR:=$(subst ",,${CONFIG_LOKI_DIR})
 CONFIG_platform_module_shortname:=$(subst ",,${CONFIG_platform_module_shortname})
 CONFIG_platform_carrier:=$(subst ",,${CONFIG_platform_carrier})
@@ -125,9 +126,12 @@ $(info Using a custom yocto layer at relative directory ${CONFIG_APPLICATION_YOC
 export yocto_user_layer_0=$(shell pwd)/${CONFIG_APPLICATION_YOCTO_LAYER_RELATIVE}
 endif
 
+# If there is a custom yocto layer, a symlink is created to point to the dtsi specified in the config;
+# this is either pre-built or produced by the firmware repository depending on the project setup.
+
 VIVADO_SOFTWARE_OUTPUT_DIR=???
 # Extra rules to make the prebuilt files in case of hardware design file change.
-${VIVADO_HARDWARE_OUTPUT_DIR}/${XSA_FILENAME}:
+${VIVADO_HARDWARE_OUTPUT_DIR}/${XSA_FILENAME}  ${VIVADO_HARDWARE_OUTPUT_DIR}/${CONFIG_FIRMWARE_DTSI_FILENAME}:
 	$(info Build is using the local project for hardware)
 	# Build the hardware and software using the firmware submodule
 	$(MAKE) -C ./${CONFIG_VIVADO_HARDWARE_MAKEFILE_DIR_RELATIVE}/ all
@@ -155,7 +159,18 @@ hardware: loki-configure-hw ${HW_EXPORT_DIR}/${XSA_FILENAME}
 software: loki-configure-sw hardware
 	$(MAKE) -C ${LOKI_DIR} software
 
-os: loki-configure-os software
+# If there is a yocto layer present, link a firmware dtsi as a symlink
+AUTOGEN_FIRMWARE_DTSI_DESTINATION=${CONFIG_APPLICATION_YOCTO_LAYER_RELATIVE}/recipes-bsp/device-tree/files/firmware-autogen.dtsi
+ifeq ($(CONFIG_USE_APPLICATION_YOCTO_LAYER),y)
+OS_REQUIREMENTS:=${AUTOGEN_FIRMWARE_DTSI_DESTINATION}
+endif
+
+${AUTOGEN_FIRMWARE_DTSI_DESTINATION}: ${HW_EXPORT_DIR}/${CONFIG_FIRMWARE_DTSI_FILENAME} .config
+	#  Modify the application yocto layer's firmware auto-generated dtsi to point to either the firmware
+	#  build's output, or the pre-built dtsi from the firmware.
+	ln -sf ${HW_EXPORT_DIR}/${CONFIG_FIRMWARE_DTSI_FILENAME} ${AUTOGEN_FIRMWARE_DTSI_DESTINATION}
+
+os: ${OS_REQUIREMENTS} loki-configure-os software
 	$(MAKE) -C ${LOKI_DIR} os
 
 mostlyclean:
