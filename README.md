@@ -141,7 +141,7 @@ To merge the latest template into your current branch:
 
 ```bash
 git fetch template
-git merge template/master --allow-unrelated-histories
+git merge template/master --allow-unrelated-histories --no-commit
 ```
 
 You will probably also want to ignore any changes to the `README.md` in favour of your own:
