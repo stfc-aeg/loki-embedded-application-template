@@ -48,12 +48,9 @@ REPO_CONFIG_PATH = "control/config/template-config.cfg"
 #REPO_STATIC_PATH = "${REACT_SOURCE_PATH}"
 
 do_install:append() {
-	#  CHECK THAT THIS IS NEEDED
-    #install -m 0644 '${WORKDIR}/loki-update-config.conf' '${D}${base_prefix}/etc/conf.d/loki-config/loki-update-config.conf'
-
 	# You can use this to install additional special resources into your image. For example, if you included some clock
 	# generator configs used by your instance, you could add them like this (assuming you also added to SRC_URI):
-	# copy_resource_protected 'control/clkten' 'clkgen'
+	copy_resource_protected 'control/clkgen' 'clkgen'
 }
 
 FILES:${PN} += "${base_prefix}/opt/loki-detector/instances/${PN}/*"
