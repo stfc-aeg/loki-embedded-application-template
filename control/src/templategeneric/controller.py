@@ -14,7 +14,7 @@ class TemplateGenericController():
 		self.storagevar = 1
 
 		self.param_tree = {
-			'generictest': (lambda:  'generictestget',  None),
+			'generictest': (self.get_storagevar,  self.set_storagevar),
 		}
 
 	def get (self, path, with_metadata=False):
