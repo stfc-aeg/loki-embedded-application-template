@@ -27,6 +27,8 @@ class TemplateCarrierController(LokiCarrier_1v0):
 	def _gen_app_paramtree(self):
 		# Override parameter tree generation to add application-specific tree
 
+		# Note that this isn't  a ParameterTree; the dictionary is combined with
+		# the actual parameter tree in the superclass.
 		additional_paramtree = {
 			'enable_led_pattern': (self.get_enable_pattern, self.set_enable_pattern),
 		}
