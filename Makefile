@@ -203,12 +203,12 @@ clean:
 	$(MAKE) -C ${CONFIG_VIVADO_HARDWARE_MAKEFILE_DIR_RELATIVE} clean
 
 distclean:
-	docker compose down -v
+	docker compose down -v || true
 	unset HW_EXPORT_DIR
 	$(MAKE) -C ${LOKI_DIR} distclean
 	$(MAKE) -C ${CONFIG_VIVADO_HARDWARE_MAKEFILE_DIR_RELATIVE} distclean
 
 clobber: distclean
-	docker compose down -v
+	docker compose down -v || true
 	unset HW_EXPORT_DIR
 	$(MAKE) -C ${LOKI_DIR} clobber
