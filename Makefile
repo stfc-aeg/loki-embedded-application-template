@@ -194,6 +194,7 @@ docker: .config init_submodules
 
 mostlyclean:
 	unset HW_EXPORT_DIR
+<<<<<<< Updated upstream
 	$(MAKE) -C ${LOKI_DIR} mostlyclean
 	$(MAKE) -C ${CONFIG_VIVADO_HARDWARE_MAKEFILE_DIR_RELATIVE} mostlyclean
 
@@ -201,14 +202,27 @@ clean:
 	unset HW_EXPORT_DIR
 	$(MAKE) -C ${LOKI_DIR} clean
 	$(MAKE) -C ${CONFIG_VIVADO_HARDWARE_MAKEFILE_DIR_RELATIVE} clean
+=======
+	$(MAKE) -C ./garud-fw/ mostlyclean
+	$(MAKE) -C ${LOKI_DIR} mostlyclean
+
+clean:
+	unset HW_EXPORT_DIR
+	$(MAKE) -C ./garud-fw/ clean
+	$(MAKE) -C ${LOKI_DIR} clean
+>>>>>>> Stashed changes
 
 distclean:
 	docker compose down -v
 	unset HW_EXPORT_DIR
+	rm -rfd  garud-fw
 	$(MAKE) -C ${LOKI_DIR} distclean
+<<<<<<< Updated upstream
 	$(MAKE) -C ${CONFIG_VIVADO_HARDWARE_MAKEFILE_DIR_RELATIVE} distclean
+=======
+>>>>>>> Stashed changes
 
-clobber:
+clobber: distclean
 	docker compose down -v
 	unset HW_EXPORT_DIR
 	$(MAKE) -C ${LOKI_DIR} clobber
