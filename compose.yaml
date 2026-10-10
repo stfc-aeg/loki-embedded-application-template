@@ -6,7 +6,7 @@ services:
       dockerfile: Dockerfile
     volumes:
       - .:/home/petalinux/project
-      - ./outputdir-garud:/home/petalinux/outdir
+      - ./outputdir:/home/petalinux/outdir
     command: su petalinux bash -c "ls /home/petalinux/ && \
             git config --global --add safe.directory /home/petalinux/project && \
             git config --global --add safe.directory /home/petalinux/project/loki && \
