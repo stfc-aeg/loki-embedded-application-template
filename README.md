@@ -155,5 +155,83 @@ git reset README.md; git checkout -- README.md
 
 Good luck!
 
+## Pointing a new project at its own firmware repo
+
+**Starting point:** you have created the application repo from the template, changed the firmware in the `loki-fw-default` submodule, and rebuilt. `git status` in the application repo now shows `modified: loki-fw-default`.
+
+The submodule still points at the shared `loki-fw-default`. These steps move your firmware changes into a project-specific repo and repoint the application repo at it.
+
+> **Never push project changes to `loki-fw-default`.**
+
+### 1. Check what has changed
+
+```bash
+git diff loki-fw-default    # "-dirty" means uncommitted changes inside the submodule
+cd loki-fw-default
+git status                  # "HEAD detached at <hash>" is normal for a submodule
+```
+
+### 2. Create the firmware repo
+
+On GitHub, create a new, **empty** repo named `loki-fw-<project>`
+
+### 3. Commit and push to the new firmware repo
+
+Inside the submodule:
+
+```bash
+git checkout -b <project>        # gets off the detached HEAD; use a name other than an existing local branch such as main
+git add <changed files>
+git commit -m "Describe your change"
+
+git remote rename origin upstream                                    # keeps the default available for pulling updates later
+git remote add origin git@github.com:<user-or-org>/loki-fw-<project>.git
+git remote -v                                                        # CHECK: origin = your new repo, upstream = loki-fw-default
+
+git push -u origin <project>:main                                    # local branch -> main on the new repo
+```
+
+
+### 4. Point the application repo at the new firmware repo
+
+From the application repo root:
+
+```bash
+cd ..
+git submodule set-url loki-fw-default git@github.com:<user-or-org>/loki-fw-<project>.git
+git submodule sync
+```
+
+Commit and push:
+
+```bash
+git add .gitmodules loki-fw-default
+git commit -m "Point firmware submodule at loki-fw-<project>"
+git push
+```
+
+`git status` should now be clean, and `git submodule status` should show the submodule on your new commit with no `+` or `-` prefix.
+
+### 5. Rename the submodule folder
+ 
+1. Rename the folder. `git mv` updates the `path =` line in `.gitmodules` for you:
+```bash
+   git mv loki-fw-default loki-fw-<project>
+```
+2. Open menuconfig and, under hardware configuration, set both of these to `loki-fw-<project>`:
+   - **Local hardware makefile target directory**
+   - **Local hardware build output directory**
+   
+   Both default to `loki-fw-default`
+
+3. Run `make` to confirm the build works. 
+4. Commit the rename and `.config` together, then push:
+```bash
+   git add -A
+   git commit -m "Rename firmware submodule to loki-fw-<project>"
+   git push
+```
+
+
 
 
